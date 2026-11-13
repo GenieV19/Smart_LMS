@@ -1,0 +1,31 @@
+# Which weights the app uses for each species.
+# Resolution order when a user picks a species:
+#   0. that species' Roboflow-hosted model, if roboflow_model is set (needs ROBOFLOW_API_KEY;
+#      images are uploaded to Roboflow and use Roboflow credits)
+#   1. that species' fine-tuned weights, if the file exists
+#   2. base_weights (species-blind model), if the file exists
+#   3. the DEMO blob detector (no ML; for UI testing only, clearly labelled in all outputs)
+#
+# Paths are relative to this file. If hf_repo is set, missing files are downloaded
+# from that Hugging Face model repo first (set HF_TOKEN as a Space secret if it is private).
+
+backend: ultralytics        # ultralytics (YOLO .pt) | rfdetr (.pth)
+hf_repo: null               # e.g. "your-user/lysosome-weights"
+
+base_weights: weights/base.pt
+species:
+  Geodia:
+    weights: weights/geodia.pt
+    roboflow_model: null   # optional; off by default (app runs fully offline with local weights)
+    class_names: [Stable cell, Uncertain, Unstable cell]   # Roboflow class_id order
+  Primnoa:
+    weights: weights/primnoa.pt
+
+# Only needed for rfdetr (YOLO .pt files carry their own class names).
+# Must be in the same order as the class ids used in training.
+class_names: []
+
+# Inference settings (users can change conf and tiling in the UI).
+imgsz: 1024                 # must match training imgsz
+default_conf: 0.25
+default_tile: 0             # 0 = no tiling; otherwise tile size in px (use training tile size)

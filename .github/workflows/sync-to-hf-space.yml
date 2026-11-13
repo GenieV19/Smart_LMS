@@ -1,0 +1,24 @@
+# Mirrors this repository to the Hugging Face Space on every push to main.
+# Requires a repository secret HF_TOKEN: a Hugging Face access token with write
+# access to the Space (huggingface.co/settings/tokens).
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Push to Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then echo "::error::HF_TOKEN secret is not set"; exit 1; fi
+          git push --force "https://GVick:${HF_TOKEN}@huggingface.co/spaces/GVick/lms" HEAD:main
