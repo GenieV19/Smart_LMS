@@ -1,6 +1,8 @@
 # Mirrors this repository to the Hugging Face Space on every push to main.
 # Requires a repository secret HF_TOKEN: a Hugging Face access token with write
 # access to the Space (huggingface.co/settings/tokens).
+# Uses the Hub upload API (not git push) so model files are stored correctly on the
+# Space whether or not they are in Git LFS here.
 name: Sync to Hugging Face Space
 
 on:
@@ -14,11 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           lfs: true
-      - name: Push to Space
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Upload to Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           if [ -z "$HF_TOKEN" ]; then echo "::error::HF_TOKEN secret is not set"; exit 1; fi
-          git push --force "https://GVick:${HF_TOKEN}@huggingface.co/spaces/GVick/lms" HEAD:main
+          pip install --quiet "huggingface_hub>=0.30"
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+          HfApi(token=os.environ["HF_TOKEN"]).upload_folder(
+              repo_id="GVick/lms", repo_type="space", folder_path=".",
+              ignore_patterns=[".git/*", ".github/*"],
+              delete_patterns=["*"],   # remove files from the Space that no longer exist here
+              commit_message=f"Sync from GitHub {os.environ['GITHUB_SHA'][:7]}",
+          )
+          PY

@@ -1,0 +1,15 @@
+{
+  "_comment": "Which ONNX model the browser app uses per species. Order: species model, then base, then demo. Add entries with tools/export_onnx.py rather than by hand.",
+  "species": {
+    "Geodia": null,
+    "Primnoa": null
+  },
+  "base": null,
+  "demo": {
+    "file": "models/demo.onnx",
+    "format": "yolo",
+    "imgsz": 640,
+    "names": ["demo dark blob", "demo light blob"],
+    "demo": true
+  }
+}

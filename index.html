@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lysosome Scoring Assistant</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Lysosome scoring assistant</h1>
+    <p>Pick the species, add micrographs and press <b>Score</b>. The model proposes a cell state for
+      each detected cell. Treat the counts as a <b>first pass to check</b>, not a final score.
+      Everything runs in your browser: <b>images never leave your computer</b>.</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel controls">
+      <fieldset>
+        <legend>Species</legend>
+        <div id="species" class="radios"></div>
+      </fieldset>
+
+      <label class="block">Images
+        <input id="files" type="file" multiple accept="image/*,.tif,.tiff">
+      </label>
+      <div id="filelist" class="muted small"></div>
+
+      <label class="block">Confidence threshold: <output id="confOut">0.25</output>
+        <input id="conf" type="range" min="0.05" max="0.95" step="0.05" value="0.25">
+        <span class="muted small">Higher = fewer, more certain detections. Keep it the same across a study.</span>
+      </label>
+
+      <details>
+        <summary>Advanced</summary>
+        <label class="block">Tile size (px, 0 = off)
+          <input id="tile" type="number" min="0" step="32" value="0">
+          <span class="muted small">For large images with small objects. Use the size the model was trained on.</span>
+        </label>
+        <label class="inline"><input id="labels" type="checkbox"> Show class labels on boxes</label>
+      </details>
+
+      <button id="run" class="primary" disabled>Loading…</button>
+      <div id="progress" class="muted small"></div>
+    </section>
+
+    <section class="panel output">
+      <div id="info" class="info"></div>
+      <div id="gallery" class="gallery"></div>
+    </section>
+  </div>
+
+  <section class="panel" id="resultsPanel" hidden>
+    <h2>Per-image counts and proportions</h2>
+    <div class="tablewrap"><table id="summary"></table></div>
+    <div class="downloads">
+      <button id="dlSummary">Summary CSV</button>
+      <button id="dlDets">Per-detection CSV</button>
+      <button id="dlZip">Review package (ZIP)</button>
+    </div>
+    <p class="muted small">The review package holds annotated images and YOLO-format labels you can
+      import into Roboflow to correct the predictions.</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
