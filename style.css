@@ -1,0 +1,44 @@
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --text: #1d2330; --muted: #5b6475; --border: #d9dde5;
+  --accent: #0b6bcb; --accent-text: #ffffff; --warn-bg: #fff4d6; --warn-border: #e2b33c;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --panel: #1d2128; --text: #e6e9ef; --muted: #9aa3b2; --border: #333a45;
+    --accent: #4c9be8; --accent-text: #0b0e12; --warn-bg: #3a3017; --warn-border: #b38a2a;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 1.6rem; margin: 8px 0; }
+h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.layout { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 16px; }
+@media (max-width: 760px) { .layout { grid-template-columns: 1fr; } }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+fieldset { border: 1px solid var(--border); border-radius: 8px; margin: 0 0 12px; }
+.radios label { margin-right: 14px; white-space: nowrap; }
+.block { display: block; margin-bottom: 12px; }
+.block input[type=range], .block input[type=number], .block input[type=file] { display: block; width: 100%; margin-top: 4px; }
+.inline { display: block; margin: 8px 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+details { margin-bottom: 12px; }
+button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--text); cursor: pointer; }
+button.primary { width: 100%; background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+button:disabled { opacity: 0.6; cursor: default; }
+.info { margin-bottom: 10px; }
+.info .warn { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.gallery figure { margin: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.gallery canvas { width: 100%; height: auto; display: block; background: #000; }
+.gallery figcaption { padding: 4px 8px; font-size: 0.85rem; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+tr.pooled td { font-weight: 600; }
+.downloads { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin: 0 4px 0 8px; }

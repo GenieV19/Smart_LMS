@@ -3,70 +3,65 @@ title: Lysosome Scoring Assistant
 emoji: 🔬
 colorFrom: blue
 colorTo: green
-sdk: gradio
-app_file: app.py
+sdk: static
+app_file: index.html
 pinned: false
 ---
 
 # Lysosome scoring assistant (prototype)
 
-Gradio app that proposes a cell-state label for each lysosome in a micrograph, then reports
-per-image counts and proportions. It assists manual scoring; it does not replace it.
+Web app that proposes a cell-state label (e.g. Stable / Unstable / Uncertain) for each cell in a
+micrograph and reports per-image counts and proportions. It assists manual scoring; it does not
+replace it.
+
+**Everything runs in the visitor's browser** (onnxruntime-web). Images are never uploaded, and
+hosting is a free Hugging Face *Static* Space: https://huggingface.co/spaces/GVick/lms
 
 ## What a user does
 1. Pick the species (Geodia or Primnoa).
-2. Upload one or more images (PNG, JPG, TIFF incl. 16-bit).
+2. Add one or more images (PNG, JPG, TIFF incl. 16-bit).
 3. Press **Score**. Boxes appear on the images, with a table of counts and proportions per class.
 4. Download:
-   - `summary_*.csv`: one row per image, plus a pooled row. Includes species, model id + weights hash, threshold, tiling, so each number is traceable to the exact model.
-   - `detections_*.csv`: one row per detected lysosome (class, confidence, box).
-   - `review_package_*.zip`: annotated PNGs plus YOLO-format label files and `classes.txt`, so predictions can be imported into Roboflow as pre-annotations and corrected.
+   - **Summary CSV**: one row per image plus a pooled row, with species, model file + hash,
+     threshold and tiling, so each number is traceable to the exact model.
+   - **Per-detection CSV**: one row per detected cell (class, confidence, box).
+   - **Review package (ZIP)**: annotated PNGs, YOLO-format labels and `classes.txt`, to import
+     into Roboflow as pre-annotations and correct.
 
-## Adding trained weights
-Put files in `weights/` (or set `hf_repo` in `config.yaml` to pull them from a Hugging Face model repo):
+## Adding a trained model
+Train as usual (YOLO or RF-DETR), then from the repository root:
 
-| file | used when |
-|---|---|
-| `weights/geodia.pt` | species = Geodia |
-| `weights/primnoa.pt` | species = Primnoa |
-| `weights/base.pt` | fallback when the species file is missing |
-
-With none present, the app runs in **DEMO mode** (an OpenCV blob finder with a single
-"unclassified" class), clearly flagged on screen and in every CSV row. For RF-DETR set
-`backend: rfdetr` and fill `class_names` in `config.yaml` (that backend is untested).
-
-Keep `imgsz` in `config.yaml` equal to the training image size, and if you trained on tiles,
-set the tile size in the app's Advanced panel to that tile size.
-
-## Using a model hosted on Roboflow
-Roboflow does not offer weight downloads for its NAS-trained RF-DETR models, so the app can
-call the hosted model instead. Set `roboflow_model` (and `class_names`) for a species in
-`config.yaml`, and provide `ROBOFLOW_API_KEY` (from app.roboflow.com/settings/api) as an
-environment variable or a Space secret. Never commit the key. Each image (or each tile, if
-tiling is on) is one API call, which uses Roboflow credits and sends the image to Roboflow.
-
-## Run locally
 ```
+python tools/export_onnx.py --weights path/to/best.pt --species Geodia --imgsz 640
+git add models/ && git commit -m "Add Geodia model" && git push
+```
+
+This converts the weights to ONNX, saves `models/geodia.onnx` and registers it in
+`models/models.json`. The Space updates automatically on push. `--imgsz` must equal the training
+image size. `--species base` registers a species-blind fallback model.
+
+Model lookup per species: species model, then `base`, then the **demo** model. The demo model
+was trained on synthetic dots, not cells; the app flags it on screen and in every CSV row.
+
+Notes:
+- Model files are public on a public Space (anyone can download the weights).
+- The RF-DETR export/decoding path is written but **untested** until a real RF-DETR export exists.
+- Ultralytics YOLO is AGPL-3.0; RF-DETR is Apache-2.0. Check which licence suits the project.
+- Large models make the first page load slow (the model downloads once per visitor, then is cached).
+
+## Running the Python version locally
+`local_app/` holds the original Gradio app (same features, runs PyTorch weights directly):
+```
+cd local_app
 pip install -r requirements.txt
 python app.py        # opens http://127.0.0.1:7860
 ```
 
 ## Deployment
-This repository is mirrored to the Hugging Face Space https://huggingface.co/spaces/GVick/lms
-by `.github/workflows/sync-to-hf-space.yml` on every push to `main` (needs the `HF_TOKEN`
-repository secret). Edit here, not in the Space: the sync overwrites the Space.
-Weight files (`*.pt`, `*.pth`) are stored with Git LFS.
+This repository is mirrored to the Space by `.github/workflows/sync-to-hf-space.yml` on every
+push to `main` (needs the `HF_TOKEN` repository secret: a Hugging Face token with write access to
+the Space). Edit here, not in the Space: the sync overwrites the Space. Model files (`*.onnx`,
+`*.pt`, `*.pth`) are stored with Git LFS.
 
-## Deploy to Hugging Face Spaces
-Creating a Gradio Space on CPU hardware needs a paid HF plan (PRO, $9/month). Free personal
-accounts can host up to 2 Gradio Spaces on **ZeroGPU**, which this app supports: when creating
-the Space pick SDK **Gradio** and hardware **ZeroGPU**, then upload the contents of this folder
-(README front-matter above configures it). Visitors share a daily GPU quota; logged-in HF users
-get more than anonymous ones.
-Weights over 10 MB need Git LFS, or keep them in a separate (optionally private) model repo
-and set `hf_repo` + an `HF_TOKEN` Space secret. Free CPU Spaces work but are slow for
-large images (expect several seconds per image); they also sleep when idle.
-
-**Data note:** a public Space means anyone with the link can upload images. Uploads are not
-stored by the app beyond the session's temp files, but make the Space private if the images
-are unpublished.
+To test the web app locally, serve the folder (e.g. `python -m http.server`) and open
+http://localhost:8000; opening `index.html` as a file does not work because the model is fetched.

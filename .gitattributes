@@ -1,3 +1,5 @@
 *.pt filter=lfs diff=lfs merge=lfs -text
 *.pth filter=lfs diff=lfs merge=lfs -text
 *.onnx filter=lfs diff=lfs merge=lfs -text
+# The demo model is committed as a plain file (small). Larger trained models should use LFS.
+models/demo.onnx -filter -diff -merge -text
